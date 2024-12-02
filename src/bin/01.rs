@@ -63,33 +63,22 @@ fn main() -> Result<()> {
     println!("\n=== Part 2 ===");
 
     fn part2<R: BufRead>(reader: R) -> Result<usize> {
-        let mut left: Vec<usize> = vec![];
-        let mut right: HashMap<usize, u32> = HashMap::new();
+        let mut times: HashMap<usize, usize> = HashMap::new();
+        let mut frequency: HashMap<usize, usize> = HashMap::new();
 
         reader
             .lines()
             .flatten()
             .into_iter()
-            .for_each(|line| {
-                let (a, b) = line.split_whitespace().map(|n| n.parse().unwrap()).collect_tuple().unwrap();
-                left.push(a);
-
-                if let Some(count) = right.get_mut(&b) {
-                    *count += 1;
-                } else {
-                    right.insert(b, 1);
-                }
+            .map(|line| {
+                line.split_whitespace().map(|n| n.parse::<usize>().unwrap()).collect_tuple::<(usize, usize)>().unwrap()
+            })
+            .for_each(|(a, b)| {
+                times.insert(a, times.get(&a).map_or_else(|| 1, |count| count + 1));
+                frequency.insert(b, frequency.get(&b).map_or_else(|| 1, |count| count + 1));
             });
-
-        let answer = left.iter().map(|a| {
-            if let Some(count) = right.get_mut(&a) {
-                a * *count as usize
-            } else {
-                0
-            }
-        }).sum();
-
-        Ok(answer)
+        
+        Ok(times.keys().map(|cifra| cifra * frequency.get(cifra).map_or(0, |a| *a) * times.get(cifra).map_or(0, |a| *a)).sum())
     }
 
     assert_eq!(31, part2(BufReader::new(TEST.as_bytes()))?);
